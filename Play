@@ -1,0 +1,199 @@
+package Game;
+
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+
+
+public class Play extends JFrame implements ActionListener {
+
+
+	//make all necessary labels, buttons for first settings panel,...
+
+	//1: rules
+	JButton rules = new JButton ("Rules"); 
+	//2: difficulty level
+	JLabel difficultyLabel = new JLabel ("Set Difficulty:");
+	static final int S_MIN = 0;
+	static final int S_MAX = 10;
+	static final int S_INIT = 0;
+	JSlider sliderDifficulty = new JSlider (JSlider.HORIZONTAL,S_MIN, S_MAX, S_INIT);
+	//3: Select your opponent
+	JLabel opponent = new JLabel ("Select your opponent:");
+	JRadioButton o1 = new JRadioButton("Another player");
+	JRadioButton o2 = new JRadioButton("Computer");
+	ButtonGroup group1 = new ButtonGroup();
+	//4: grid layout
+	JLabel grid = new JLabel("Choose a 4x4, 4x3, 6x1, 2x2, or 6x2 grid. A 4x4 grid is recommended.");
+	JLabel rows = new JLabel("Rows:");
+	JSpinner s1 = new JSpinner ();
+	JLabel columns = new JLabel("Columns:");
+	JSpinner s2 = new JSpinner ();
+	//5: Theme
+	JLabel theme = new JLabel ("Select theme:");
+	JRadioButton r1 = new JRadioButton("The wonders of Belgium");
+	JRadioButton r2 = new JRadioButton("The wonders of the World");
+	ButtonGroup group2 = new ButtonGroup();
+	//6: buttons 
+	JButton highscores = new JButton ("High Scores"); 
+	JButton start = new JButton ("Start"); 
+	JButton exit = new JButton ("Exit"); 
+	// create panel to organise the GUI
+	JPanel p1 = new JPanel();
+	JPanel p2 = new JPanel();
+	JPanel p3 = new JPanel();
+	JPanel p4 = new JPanel();
+	JPanel p5 = new JPanel();
+	JPanel p6 = new JPanel();
+	JPanel p7 = new JPanel();
+	// create variables for constructor NewGame
+	public String Accelerator;
+	public String Opponent;
+	public int Rows;
+	public int Columns;
+	public String Theme;
+	Highscores highscoores = new Highscores();
+	
+	
+
+	//Constructor method
+	public void Play() {
+
+		p1.add(rules);
+		p2.add(difficultyLabel);
+		p2.add(sliderDifficulty);
+		p3.add(opponent);
+		p3.add(o1);
+		p3.add(o2);
+		group1.add(o1);
+		group1.add(o2);
+		p4.add(rows);
+		p4.add(s1);
+		p4.add(columns);
+		p4.add(s2);
+		p5.add(theme);
+		p5.add(r1);
+		p5.add(r2);
+		group2.add(r1);
+		group2.add(r2);
+		p6.add(highscores);
+		p6.add(start);
+		p6.add(exit);
+		p7.add(grid);
+		
+
+		// format panel
+		p1.setBorder(BorderFactory.createEmptyBorder(40,100,20,100));
+		p1.setLayout(new GridLayout(1,1));
+		p2.setBorder(BorderFactory.createEmptyBorder(40,50,20,50));
+		p2.setLayout(new GridLayout(1,1));
+		p3.setBorder(BorderFactory.createEmptyBorder(40,50,20,50));
+		p3.setLayout(new GridLayout(1,1));
+		p4.setBorder(BorderFactory.createEmptyBorder(30,180,20,180));
+		p4.setLayout(new GridLayout(1,1));
+		p5.setBorder(BorderFactory.createEmptyBorder(40,20,20,0));
+		p5.setLayout(new GridLayout(1,1));
+		p6.setBorder(BorderFactory.createEmptyBorder(30,100,20,100));
+		p6.setLayout(new GridLayout(1,1));
+		p7.setBorder(BorderFactory.createEmptyBorder(30,80,0,40));
+		p7.setLayout(new GridLayout(1,1));
+		highscores.addActionListener(this);
+		start.addActionListener(this);
+		exit.addActionListener(this);
+		rules.addActionListener(this);
+
+		// let the slider listen
+		sliderDifficulty.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				}
+		});
+		
+		// let the row spinner listen
+		s1.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				}
+		});
+		
+		// let the column spinner listen
+		s2.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				}
+		});
+
+		// take "Another Player" and "Belgium" as default player and theme
+		o1.setSelected(true);
+		r1.setSelected(true);
+
+
+		//format the entire JFrame and add the panels
+		setLayout (new GridLayout(7,1));
+
+		add(p1);
+		add(p2);
+		add(p3);
+		add(p7);
+		add(p4);
+		add(p5);
+		add(p6);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		pack();}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equals(start.getText())) {
+			if(o1.isSelected()) Opponent = "Another Player";
+			if(o2.isSelected()) Opponent = "Computer";
+			if(r1.isSelected()) Theme = "Belgium";
+			if(r2.isSelected()) Theme = "World";
+
+			// standardize the sliderdifficulty to a percentage between 0 and 100%
+			float difficulty = Float.valueOf(sliderDifficulty.getValue()) / (S_MAX - S_MIN);
+			
+			int numberOfrows = (int) s1.getValue();
+			int numberOfcolumns = (int) s2.getValue();
+
+			// begin a new game with the parameters
+			NewGame newgame = new NewGame();
+			newgame.setParams(difficulty, Opponent, numberOfrows, numberOfcolumns, Theme);
+			newgame.NewGame();
+			
+		}
+
+		// end the game
+		if(e.getActionCommand().equals(exit.getText()))
+			System.exit(0);
+		// go to the rules menu
+		if(e.getActionCommand().equals(rules.getText())) {
+			Rules rules = new Rules();
+			rules.Rules();
+		}
+// !!!	// go to the highscores menu
+		if(e.getActionCommand().equals(highscores.getText())) {
+			highscoores.Highscores();
+			highscoores.addScoreToHighScoreList();
+		}
+	}
+
+	// main method which starts by creating the settings panel and making it visible
+	public static void main(String[] args) {
+		Play frame = new Play();
+		frame.Play();
+		frame.setSize(600,550);
+		frame.setVisible(true);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+

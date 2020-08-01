@@ -1,0 +1,88 @@
+package Game;
+
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+
+import Game.NewGame.ControllerClass;
+
+public class Card extends JLabel implements MouseListener{
+
+	// make all necessary variables and a controller
+	Icon faceIcon;
+	Icon backIcon;
+	boolean faceUp=false;
+	int index;
+	int iconWidthHalf; 
+	int iconHeightHalf;
+	boolean mousePressed=false;
+	private ControllerClass controller;
+
+	//make the Card constructor
+	public Card (ControllerClass controller, Icon face, Icon back, int index) {
+
+		super(back);
+		this.faceIcon=face;
+		this.backIcon=back;
+		this.index=index;
+		this.addMouseListener(this);
+		this.iconHeightHalf=back.getIconHeight()/2;
+		this.iconWidthHalf=face.getIconWidth()/2;
+		this.controller=controller;
+	}
+
+	public int getIndex() {
+		return index;}
+
+	public void turnUp() {
+		if(this.faceUp) return;
+		this.faceUp=true;
+		this.faceUp=this.controller.turnUp(this);
+		if(this.faceUp) {this.setIcon(this.faceIcon);}
+	}
+
+	public void turnDown() {
+		if(!this.faceUp) return;
+		this.setIcon(this.backIcon);
+		this.faceUp=false;
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		if(overIcon(e.getX(), e.getY())) this.turnUp();
+	}	
+	// overIcon returns true when the mouse is in a position that lays within the coordinates
+	// of the four corners of the card
+	private boolean overIcon(int a, int b){
+		int distA=Math.abs(a-(this.getWidth()/2));
+		int distB=Math.abs(b-(this.getHeight()/2));
+		if (distA>this.iconHeightHalf||distB>this.iconWidthHalf) return false;
+		return true;
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		if(overIcon(e.getX(), e.getY())) this.mousePressed=true;
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		if (this.mousePressed) {
+			this.mousePressed=false;
+			this.mouseClicked(e);
+		}
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		this.mousePressed=false;
+
+
+	}
+
+}

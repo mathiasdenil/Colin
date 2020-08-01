@@ -1,0 +1,420 @@
+package Game;
+
+import java.awt.Container;
+import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Timer;
+import java.util.*;
+
+public class NewGame implements ActionListener {
+
+	private Container mainContentPane;
+	
+	// make needed frame, variables and arrays
+	private JFrame mainFrame;
+	public float difficulty;
+	public int time;
+	public int scoore1;
+	public int scoore2 = 1;
+	public int totalmatches;
+	public String opponent;
+	public int rows;
+	public int columns;
+	public String theme;
+	boolean player1 = true;
+	private ControllerClass controller;
+	private List<Card> allCards = new ArrayList<>();
+	private ImageIcon cardIcon[];
+
+	// make needed labels, buttons and panels
+	JLabel scoreLabel1 = new JLabel("Score player 1:");
+	JLabel scoreLabel2 = new JLabel("Score player 2:");
+	JLabel score1 = new JLabel("0");
+	JLabel score2 = new JLabel("0");
+	JLabel move = new JLabel("Next turn:");
+	JLabel who = new JLabel("Player 1");
+	ButtonGroup group2 = new ButtonGroup();
+	JButton highscores = new JButton("Highscores:");
+	JButton exit = new JButton("Quit the game:"); 
+	JButton anew = new JButton("Play a new game:");
+	JPanel panel2 = new JPanel((new GridLayout(6,4)));
+
+	// set the parameters from the settings frame from the Play Class
+	public void setParams(float Difficulty, String Opponent, int Rows, int Columns, String Theme) {
+		this.difficulty = Difficulty;
+		this.opponent = Opponent;
+		this.rows = Rows;
+		this.columns = Columns;
+		this.theme = Theme;
+		controller = new ControllerClass();
+		controller.setParams(this.difficulty, this.opponent, this.rows, this.columns, this.theme);
+	}
+
+	public class ControllerClass implements ActionListener {
+		
+		// make needed variables
+		private Vector turnedCards;
+		private Timer turnDownTimer;
+		private final int TURN_DOWN_DELAY = 1250;
+		public int additionalPointsMatch = 3;
+		public int additionalPointsMismatch = 1;
+		float difficulty;
+		String accelerator;
+		String opponent;
+		int rows;
+		int columns;
+		String theme;
+		ComputerPlayer cp1;
+		
+		// set the parameters from the settings frame from the Play Class for the ControllerClass as well
+		public void setParams(float Difficulty, String Opponent, int Rows, int Columns,
+				String Theme) {
+			this.difficulty = Difficulty;
+			this.opponent = Opponent;
+			this.rows = Rows;
+			this.columns = Columns;
+			this.theme = Theme;
+			cp1 = new ComputerPlayer(this.difficulty);
+		}
+
+		public ControllerClass() {
+			
+			// make a vector of two turned cards and make turndowntimer that counts down in 1s (1000ms)
+			this.turnedCards = new Vector(2);
+			this.turnDownTimer = new Timer(this.TURN_DOWN_DELAY, new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					timerElapsed(e);
+				}
+			});
+			this.turnDownTimer.setRepeats(false);
+
+		}
+		
+		// turns up cards as long as there are no two cards turned up
+		public boolean turnUp(Card card) {
+			cp1.addSeenCard(card);
+			if (this.turnedCards.size() < 2)
+				return doAddCard(card);
+			return false;
+		}
+		
+		public boolean doAddCard(Card card) {
+			this.turnedCards.add(card);
+			// if the double cards card is flipped (which has index 0), the rewards and penalties get doubled for the rest of the game
+			if (card.getIndex() == 0) {
+				additionalPointsMatch = 2 * additionalPointsMatch;
+				additionalPointsMismatch = 2 * additionalPointsMismatch;
+			}
+			if (this.turnedCards.size() == 2) {
+				Card otherCard = (Card) this.turnedCards.get(0);
+	//!!!			// if the indexes are the same, a match is found and the cards are turned
+				if (otherCard.getIndex() == card.getIndex()) {
+					totalmatches++;
+					this.turnedCards.clear();
+					// if the match is found and it was player 1's turn, player 1's score increases and the label indicates that the turn stays at player 1
+					if (player1 == true) {
+						scoore1 += additionalPointsMatch;
+						score1.setText(Integer.toString(scoore1));
+						who.setText("Player 1");
+						this.turnDownTimer.start();
+					} else {
+						player1 = false;
+						scoore2 += additionalPointsMatch;
+						score2.setText(Integer.toString(scoore2));
+						if (opponent.equals("Computer")) {
+							who.setText("Computer");
+						} else {
+							who.setText("Player 2");
+						}
+						this.turnDownTimer.start();
+					}
+					;
+					// if a total of 8 matches is found, the game ends and dependent on the player, one or two highscores are added to the highscore list
+					if (totalmatches == (this.rows*this.columns)/2) {
+						Highscores newhighscore = new Highscores();
+						if(!opponent.equals("Computer")) {
+							newhighscore.setParams1(scoore1, scoore2);
+						} else newhighscore.setParams2(scoore1);
+						newhighscore.Highscores();
+						newhighscore.addScoreToHighScoreList();
+					}
+				} else {
+					// if the cards don't match, penalties are added to the scores and turns are switched
+					this.turnDownTimer.start();
+					if (player1 == true) {
+						scoore1 -= additionalPointsMismatch;
+						player1 = false;
+						score1.setText(Integer.toString(scoore1));
+
+						if (opponent.equals("Computer")) {
+							who.setText(opponent);
+						} else {
+							who.setText("Player 2");
+						}
+
+					} else {
+						scoore2 -= additionalPointsMismatch;
+						score2.setText(Integer.toString(scoore2));
+						player1 = true;
+						who.setText("Player 1");
+					}
+				}
+			}
+
+			return true;
+
+		}
+
+		private void timerElapsed(ActionEvent e) {
+			for (int i = 0; i < this.turnedCards.size(); i++) {
+				Card card = (Card) this.turnedCards.get(i);
+				card.turnDown();
+			}
+			this.turnedCards.clear();
+			
+			// laat de computer spelen als het zijn beurt is:
+			String text = who.getText();
+			if(opponent.equals("Computer") && text.equals("Computer")) {
+				
+				// turn up all chosen cards
+				List<Card> chosenCards = cp1.chooseTwoCards();
+				for (Card chosenCard : chosenCards) {
+					chosenCard.turnUp();
+					
+					// add the chosen cards to the seen cards
+					cp1.addSeenCard(chosenCard);
+				}
+			}
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		}
+
+	}
+
+	public void NewGame() {
+		
+		// make the mainframe and set the layout
+		this.mainFrame = new JFrame("Matching Game");
+		this.mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.mainFrame.setTitle("Memory Board Game");
+		this.mainFrame.setSize(2000, 1000);
+		this.mainContentPane = this.mainFrame.getContentPane();
+		
+		// add the buttons and labels to the score panel
+		panel2.add(scoreLabel1);
+		panel2.add(score1);
+		panel2.add(scoreLabel2);
+		panel2.add(score2);
+		panel2.add(move);
+		panel2.add(who);
+		panel2.add(highscores);
+		panel2.add(exit);
+		panel2.add(anew);
+		
+		// set the layout of the score panel and add it to the main frame
+		panel2.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		this.mainContentPane.add(panel2);
+		this.mainContentPane.setLayout(new GridLayout(1, 2));
+		this.cardIcon = loadCardIcons();
+		
+		// make the buttons listen
+		highscores.addActionListener(this);
+		exit.addActionListener(this);
+		anew.addActionListener(this);
+		
+		this.mainContentPane.add(makeCards());
+		this.mainFrame.setVisible(true);
+		
+	}
+
+	public ImageIcon[] loadCardIcons() {
+		ImageIcon icon[] = new ImageIcon[(this.rows*this.columns)/2+1];
+			
+	//!!!	// load the images, dependent on which theme is selected
+		
+			// the first image is the double points image
+			String fileName = "src/double points.png";
+			icon[0] = new ImageIcon(fileName);
+			for (int i = 1; i < (this.rows*this.columns)/2+1; i++) {
+				switch (this.theme) {
+				case "Belgium":
+					String fileName1 = "src/Belgium" + i + ".png";
+					icon[i] = new ImageIcon(fileName1);
+					break;
+				case "World":
+					String fileName2 = "src/World" + i + ".png";
+					icon[i] = new ImageIcon(fileName2);
+					break;
+				}
+			}
+		
+		return icon;
+
+	}
+	
+	// make and randomize the cards, add all new cards to the all cards array and to the first panel
+	public JPanel makeCards() {
+		
+		JPanel panel1 = new JPanel((new GridLayout(this.rows, this.columns)));
+		ImageIcon backIcon = this.cardIcon[(this.rows*this.columns)/2];
+		int cardsToAdd[] = new int[this.rows*this.columns];
+		for (int i = 0; i < (this.rows*this.columns)/2; i++) {
+			cardsToAdd[2*i] = i;
+			cardsToAdd[2*i + 1] = i;
+		}
+		randomizeCardArray(cardsToAdd);
+		for (int i = 0; i < cardsToAdd.length; i++) {
+			int num = cardsToAdd[i];
+			Card newCard = new Card(controller, this.cardIcon[num], backIcon, num);
+			allCards.add(newCard);
+			panel1.add(newCard);
+		}
+		return panel1;
+	}
+
+	public void randomizeCardArray(int[] x) {
+		Random randomizer = new Random();
+		for (int i = 0; i < x.length; i++) {
+			int y = randomizer.nextInt(x.length);
+			int s = x[y];
+			x[y] = x[i];
+			x[i] = s;
+		}
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// if the exit button is pressed, close the application
+		if (e.getActionCommand().equals(exit.getText()))
+			System.exit(0);
+		// if the new button is pressed, go back to the settings menu to set up a new game
+		if (e.getActionCommand().equals(anew.getText())) {
+			Play frame = new Play();
+			frame.Play();
+			frame.setSize(600, 550);
+			frame.setVisible(true);
+			this.mainFrame.setVisible(false);
+		}
+		// if the highscores button is pressed, show the highscores frame
+		if (e.getActionCommand().equals(highscores.getText())) {
+			Highscores highscores = new Highscores();
+			highscores.Highscores();
+			highscores.addScoreToHighScoreList();
+		}
+		this.mainFrame.setVisible(false);
+
+	}
+	
+	// the ComputerPlayer class is only of importance if the Computer option is indicated
+	public class ComputerPlayer {
+
+		private float difficulty;
+		
+		// make an array of seen cards
+		private List<Card> seenCards = new ArrayList<>();
+		
+		// let the computer player have a certain difficulty level based on the input of the settings frame
+		public ComputerPlayer(float difficulty) {
+			this.difficulty = difficulty;
+		}
+		
+		public void addSeenCard(Card card) {
+			if(seenCards.contains(card)) return;
+			// whether the computer should remember a card depends on the difficulty level
+			boolean shouldRememberCard = new Random().nextFloat() <= this.difficulty;
+			if (shouldRememberCard) {
+				// if the computer should remember the card, we add it to the, for the computer "seen", cards
+				seenCards.add(card);
+			}
+		}
+
+		public List<Card> chooseTwoCards() {
+			List<Card> identicalCards = getPairOfIdenticalCards();
+			if (identicalCards.size() == 2) {
+				// if there are two identical cards, choose these ones
+				return identicalCards;
+	// !!!		// if there are fewer than two identical cards, choose random cards from the not turnable cards
+			} else if(identicalCards.size() < 2) { 	
+	        	List<Card> randomCards = new ArrayList<>();		
+				List<Card> turnableCards = new ArrayList<>();
+				
+				// for all cards, if they are not turned, add them to turnable cards
+				for(Card card :	 allCards) {
+					if(!card.faceUp) {
+						turnableCards.add(card);
+					}
+				}
+				// check if there are still two cards that can be flipped
+				if(turnableCards.size() < 2) {
+					// Error: no two cards can be flipped
+					return randomCards;
+				}
+				
+	            Random randomizer = new Random();	            
+	            int	card1Index = randomizer.nextInt(turnableCards.size());
+	            int card2Index;
+	            
+	            do {
+	            	card2Index = randomizer.nextInt(turnableCards.size());
+	            } while(card1Index == card2Index);
+	            
+	            randomCards.add(turnableCards.get(card1Index));
+	            randomCards.add(turnableCards.get(card2Index));
+	            
+	            return randomCards;
+	            
+	        }
+	    
+	
+			// if no card is found, return empty list
+			return new ArrayList<>();
+		}
+
+		private List<Card> getPairOfIdenticalCards() {
+			
+			// initial empty list of identical and turnable cards
+			List<Card> identicalCards = new ArrayList<>();
+			List<Card> turnableCards = new ArrayList<>();
+			
+			// for all seen Cards, if they are not turned, add them to turnable cards
+			for(Card card : seenCards) {
+				if(!card.faceUp) {
+					turnableCards.add(card);
+				}
+			}
+			// if there are less than two cards turnable, there is no possibility of having identical ones.
+			// hence, return an empty list of "identical" cards
+			if (turnableCards.size() < 2) {
+				return identicalCards;
+			}
+
+			
+			
+			for (int card1Index = 0; card1Index < turnableCards.size() - 1; card1Index++) {
+				for (int card2Index = card1Index + 1; card2Index < turnableCards.size(); card2Index++) {
+					Card card1 = turnableCards.get(card1Index);
+					Card card2 = turnableCards.get(card2Index);
+					if (card1.index == card2.index) {
+						// there are two identical cards in the list
+						identicalCards.add(card1);
+						identicalCards.add(card2);
+
+						// there is no need to look further to identical cards
+						return identicalCards;
+					}
+				}
+			}
+
+			// if after going over all the cards there are no identical ones: 
+			// return identicalCards (which is still empty)
+			return identicalCards;
+		}
+	}
+
+}

@@ -1,0 +1,74 @@
+package Game;
+
+import java.awt.Container;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+
+public class Rules extends JFrame implements ActionListener {
+
+	
+	private Container mainContentPane;
+	private JFrame mainFrame;
+	JButton backToSettings = new JButton ("Go back to settings");
+	JLabel description = new JLabel ("<html>The purpose of the game is to find faster as the computer or the other player pairs of cards, achieve a higher score as your opponent and eventually beat the high score. A match increases your score by 3 points, a mismatch decreases your score by 1 point.\n" + 
+			"This memory game is unique in three ways:\n" + 
+			"\n" + 
+			"First, there is the possibility to change themes. You can either choose the theme “Wonders of Belgium” or the theme “Wonders of the World”.\n" + 
+			"Second, you can set a difficulty level. The difficulty level indicates how hard it will be to beat the computer. More specifically, the Set Difficulty slider goes from 0 to 1, with each value assigned as the probability that the computer will remember a seen card. This makes it harder and harder to beat the computer when you increase the value of the slider.\n" + 
+			"Third, in each game, there are two accelerator cards. When someone clicks on an accelerator card, the rewards of a match and the penalties of a mismatch get doubled. As the first matches are often a result of luck, this way, more weight is put on matches found when the game progresses and when you need to be able to remember a larger number of cards. Therefore, as soon as an accelerator card pops up: make sure that your attention gets even higher - the rewards get doubled, but the penalties as well! \n" + 
+			"<html>");
+
+
+	public void Rules() {
+
+		// make the main frame and set the layout of the frame
+		this.mainFrame = new JFrame ("Matching Game");
+		this.mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.mainFrame.setTitle("Memory Board Game");
+		this.mainFrame.setSize(1000,1000);
+		this.mainContentPane=this.mainFrame.getContentPane();
+		this.mainContentPane.setLayout(new BoxLayout(this.mainContentPane, BoxLayout.LINE_AXIS));
+		this.mainFrame.setLayout (new GridLayout(2,1));
+		this.mainFrame.setVisible(true);
+
+		// make the panels and set the layout of the panels
+		JPanel pA = new JPanel();
+		pA.setBorder(BorderFactory.createEmptyBorder(60,203,20,200));
+		pA.setLayout(new GridLayout(1,1));
+		JPanel pB = new JPanel();
+		pB.setBorder(BorderFactory.createEmptyBorder(0,200,180,200));
+		pB.setLayout(new GridLayout(1,1));
+
+		// add the label and button to the panel 
+		pA.add(description);
+		pB.add(backToSettings);
+
+		//add the panels to the frame
+		this.mainFrame.getContentPane().add(pA);
+		this.mainFrame.getContentPane().add(pB);
+
+		// make sure the button listens
+		backToSettings.addActionListener(this);
+
+	}
+
+	// play a new game when the backToSettings button is pressed and close the rules window
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equals(backToSettings.getText())) {
+			Play frame = new Play();
+			frame.Play();
+			frame.setSize(600,550);
+			frame.setVisible(true);
+			this.mainFrame.setVisible(false);
+		}
+	}
+}

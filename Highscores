@@ -1,0 +1,110 @@
+package Game;
+
+import java.awt.Container;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+
+public class Highscores implements ActionListener {
+
+	// make the necessary container, button, labels and array of integers
+	private Container mainContentPane;
+	private JFrame mainFrame;
+	JButton backToSettings = new JButton ("Go back to settings");
+	JLabel first = new JLabel ("1st place:");
+	JLabel second = new JLabel ("2nd place:");
+	JLabel third = new JLabel ("3rd place:");
+	JLabel firstplace = new JLabel ("/ points");
+	JLabel secondplace = new JLabel ("/ points");
+	JLabel thirdplace = new JLabel ("/ points");
+	static ArrayList<Integer> arl = new ArrayList<Integer>();
+	
+	// make two variables which will be added to the list of highscores 
+	public int scoore1;
+	public int scoore2;
+
+	public void Highscores() {
+
+		// make the main frame
+		this.mainFrame = new JFrame ("Matching Game");
+		this.mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.mainFrame.setTitle("Memory Board Game");
+		this.mainFrame.setSize(2000,1000);
+		this.mainContentPane=this.mainFrame.getContentPane();
+		this.mainContentPane.setLayout(new BoxLayout(this.mainContentPane, BoxLayout.LINE_AXIS));
+		this.mainFrame.setLayout (new GridLayout(2,1));
+		this.mainFrame.setVisible(true);
+		
+		//make the panels and set the layout
+		JPanel pA = new JPanel();
+		pA.setBorder(BorderFactory.createEmptyBorder(0,270,40,100));
+		pA.setLayout(new GridLayout(3,1));
+		JPanel pB = new JPanel();
+		pB.setBorder(BorderFactory.createEmptyBorder(0,200,180,200));
+		pB.setLayout(new GridLayout(1,1));
+		
+		// add the button and labels to the panels
+		pA.add(first);
+		pA.add(firstplace);
+		pA.add(second);
+		pA.add(secondplace);
+		pA.add(third);
+		pA.add(thirdplace);
+		pB.add(backToSettings);
+		
+		// add the panels to the main frame
+		this.mainFrame.getContentPane().add(pA);
+		this.mainFrame.getContentPane().add(pB);
+		
+		// make sure the button listens
+		backToSettings.addActionListener(this);
+		
+
+
+	}
+
+	public void setParams1(int scoore1, int scoore2) {
+		this.scoore1 = scoore1;
+		this.scoore2 = scoore2;
+
+	}
+	
+	// method overloading in case the computer option is chosen and only the score of the player one should be saved
+	public void setParams2(int scoore1) {
+		this.scoore1 = scoore1;
+	}
+
+	public void addScoreToHighScoreList () {
+		
+		// add the scores to the array which are received by the doAddCard method of the NewGame class
+		arl.add(scoore1);
+		arl.add(scoore2);
+		//order the scores in descending order
+		Collections.sort(arl, Collections.reverseOrder());
+		// print the three highest scores
+		firstplace.setText(Integer.toString(arl.get(0))+" points");
+		secondplace.setText(Integer.toString(arl.get(1))+" points");
+		thirdplace.setText(Integer.toString(arl.get(2))+" points");
+	}
+	
+	// go back to the settings menu when clicked on the backToSettings button
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equals(backToSettings.getText())) {
+			Play frame = new Play();
+			frame.Play();
+			frame.setSize(600,550);
+			frame.setVisible(true);
+			this.mainFrame.setVisible(false);
+		}
+
+	}}
